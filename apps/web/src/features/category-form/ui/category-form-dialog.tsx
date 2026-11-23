@@ -1,6 +1,11 @@
 'use client';
 
-import { type CategoryDto, createCategorySchema } from '@expense-tracker/shared';
+import {
+  CATEGORY_ICON_NAMES,
+  type CategoryDto,
+  createCategorySchema,
+  isCategoryIconName,
+} from '@expense-tracker/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check } from 'lucide-react';
 import { useState, useTransition } from 'react';
@@ -8,7 +13,6 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { z } from 'zod';
 import {
   CATEGORY_COLORS,
-  CATEGORY_ICONS,
   CategoryBadge,
   CategoryIcon,
   DEFAULT_CATEGORY_COLOR,
@@ -60,7 +64,8 @@ function CategoryForm({ category, onDone }: { category: CategoryDto | undefined;
     defaultValues: {
       name: category?.name ?? '',
       color: category?.color ?? DEFAULT_CATEGORY_COLOR,
-      icon: category?.icon ?? DEFAULT_CATEGORY_ICON,
+      // A legacy row may hold a name that is no longer valid → start from the default instead of failing on submit.
+      icon: isCategoryIconName(category?.icon) ? category.icon : DEFAULT_CATEGORY_ICON,
     },
   });
 
@@ -131,7 +136,7 @@ function CategoryForm({ category, onDone }: { category: CategoryDto | undefined;
             control={control}
             render={({ field }) => (
               <div className="grid grid-cols-6 gap-2">
-                {Object.keys(CATEGORY_ICONS).map((iconName) => (
+                {CATEGORY_ICON_NAMES.map((iconName) => (
                   <button
                     key={iconName}
                     type="button"

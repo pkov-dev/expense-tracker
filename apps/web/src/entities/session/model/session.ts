@@ -2,6 +2,7 @@ import 'server-only';
 
 import type { AuthResponseDto } from '@expense-tracker/shared';
 import { cookies } from 'next/headers';
+import { apiRequest } from '@/shared/api';
 import {
   ACCESS_COOKIE_SKEW_SECONDS,
   ACCESS_TOKEN_COOKIE,
@@ -10,9 +11,10 @@ import {
 } from '@/shared/config';
 import { getJwtTtlSeconds } from '../lib/jwt';
 
-export { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE };
-
 const DEFAULT_ACCESS_TTL_SECONDS = 60 * 15;
+
+/** Logout must not hang on a slow API: the local session is destroyed regardless. */
+const LOGOUT_TIMEOUT_MS = 3_000;
 
 /** Shared by Server Actions (via `createSession`) and the proxy (via `sessionCookies`). */
 export function cookieOptions() {
@@ -52,6 +54,22 @@ export async function destroySession(): Promise<void> {
   store.delete(REFRESH_TOKEN_COOKIE);
 }
 
-export async function getRefreshToken(): Promise<string | undefined> {
+async function getRefreshToken(): Promise<string | undefined> {
   return (await cookies()).get(REFRESH_TOKEN_COOKIE)?.value;
+}
+
+/**
+ * Logs the user out: revokes the refresh token in the API (best effort — the cookies are cleared even if
+ * the API is unreachable) and deletes the session cookies.
+ */
+export async function endSession(): Promise<void> {
+  const refreshToken = await getRefreshToken();
+  if (refreshToken) {
+    await apiRequest('/api/auth/logout', {
+      method: 'POST',
+      body: { refreshToken },
+      timeoutMs: LOGOUT_TIMEOUT_MS,
+    }).catch(() => undefined);
+  }
+  await destroySession();
 }

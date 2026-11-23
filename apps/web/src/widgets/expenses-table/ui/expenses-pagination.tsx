@@ -1,4 +1,5 @@
-import { expensesHref } from '@/entities/expense';
+import { toExpensesQueryString } from '@/entities/expense';
+import { ROUTES } from '@/shared/config';
 import {
   Pagination,
   PaginationContent,
@@ -18,7 +19,8 @@ interface Props {
 
 export function ExpensesPagination({ page, totalPages, filters }: Props) {
   if (totalPages <= 1) return null;
-  const href = (target: number) => expensesHref(filters, target);
+  const href = (target: number) =>
+    `${ROUTES.transactions}${toExpensesQueryString(filters, target)}`;
 
   return (
     <Pagination className="mx-0 w-auto">
@@ -27,7 +29,12 @@ export function ExpensesPagination({ page, totalPages, filters }: Props) {
           {page > 1 ? (
             <PaginationPrevious href={href(page - 1)} />
           ) : (
-            <PaginationPrevious href={href(1)} aria-disabled tabIndex={-1} className="pointer-events-none opacity-50" />
+            <PaginationPrevious
+              href={href(1)}
+              aria-disabled
+              tabIndex={-1}
+              className="pointer-events-none opacity-50"
+            />
           )}
         </PaginationItem>
         {getPageItems(page, totalPages).map((item) => (

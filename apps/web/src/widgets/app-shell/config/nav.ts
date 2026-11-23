@@ -1,4 +1,5 @@
 import { LayoutList, Tags, type LucideIcon } from 'lucide-react';
+import { ROUTES } from '@/shared/config';
 
 export interface NavItem {
   title: string;
@@ -7,6 +8,6 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { title: 'Транзакции', href: '/', icon: LayoutList },
-  { title: 'Категории', href: '/categories', icon: Tags },
+  { title: 'Транзакции', href: ROUTES.transactions, icon: LayoutList },
+  { title: 'Категории', href: ROUTES.categories, icon: Tags },
 ];

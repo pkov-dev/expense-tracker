@@ -1,3 +1,4 @@
+import type { CategoryIconName } from '@expense-tracker/shared';
 import {
   Briefcase,
   Car,
@@ -20,8 +21,11 @@ import {
   Wifi,
 } from 'lucide-react';
 
-/** Icon names stored in `Category.icon` (kebab-case lucide names) → component. */
-export const CATEGORY_ICONS: Record<string, LucideIcon> = {
+/**
+ * Icon names stored in `Category.icon` → component. Typed against the shared name list, so adding an
+ * icon to `CATEGORY_ICON_NAMES` without a component here is a compile error.
+ */
+export const CATEGORY_ICONS: Record<CategoryIconName, LucideIcon> = {
   'shopping-cart': ShoppingCart,
   utensils: Utensils,
   coffee: Coffee,
@@ -42,4 +46,4 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   tag: Tag,
 };
 
-export const DEFAULT_CATEGORY_ICON = 'tag';
+export const DEFAULT_CATEGORY_ICON: CategoryIconName = 'tag';

@@ -7,15 +7,16 @@ import {
   updateCategorySchema,
 } from '@expense-tracker/shared';
 import { revalidatePath } from 'next/cache';
-import { ApiError, authorizedRequest, type FormState } from '@/shared/api';
+import { type FormState, toFormError } from '@/shared/api';
+import { authorizedRequest } from '@/shared/api/server';
 
-function toFormError(error: unknown): FormState {
-  // Anything that is not an API error (e.g. the redirect thrown on a dead session) must propagate.
-  if (!(error instanceof ApiError)) throw error;
-  if (error.status === 409) return { error: 'Категория с таким названием уже есть' };
-  if (error.status === 404) return { error: 'Категория не найдена. Обновите страницу' };
-  return { error: 'Не удалось сохранить категорию. Попробуйте позже' };
-}
+const SAVE_ERRORS = {
+  fallback: 'Не удалось сохранить категорию. Попробуйте позже',
+  byStatus: {
+    404: 'Категория не найдена. Обновите страницу',
+    409: 'Категория с таким названием уже есть',
+  },
+};
 
 // Categories show up in the sidebar-less pages, the expense list and the form selects → refresh everything.
 const refresh = () => revalidatePath('/', 'layout');
@@ -27,19 +28,25 @@ export async function createCategoryAction(input: CreateCategoryInput): Promise<
   try {
     await authorizedRequest('/api/categories', { method: 'POST', body: parsed.data });
   } catch (error) {
-    return toFormError(error);
+    return toFormError(error, SAVE_ERRORS);
   }
   refresh();
 }
 
-export async function updateCategoryAction(id: string, input: UpdateCategoryInput): Promise<FormState> {
+export async function updateCategoryAction(
+  id: string,
+  input: UpdateCategoryInput,
+): Promise<FormState> {
   const parsed = updateCategorySchema.safeParse(input);
   if (!parsed.success) return { error: 'Проверьте введённые данные' };
 
   try {
-    await authorizedRequest(`/api/categories/${encodeURIComponent(id)}`, { method: 'PATCH', body: parsed.data });
+    await authorizedRequest(`/api/categories/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: parsed.data,
+    });
   } catch (error) {
-    return toFormError(error);
+    return toFormError(error, SAVE_ERRORS);
   }
   refresh();
 }

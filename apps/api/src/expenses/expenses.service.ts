@@ -12,9 +12,11 @@ import { QueryBus } from '@nestjs/cqrs';
 import { GetCategoryByIdQuery } from '../categories';
 import type { Expense } from '../generated/prisma/client';
 import { toExpenseDto } from './expense.mapper';
-import { ExpensesRepository, type SummaryRow, type UpdateExpenseData } from './expenses.repository';
+import { totalsByCurrency } from './expense-totals';
+import { ExpensesRepository, type UpdateExpenseData } from './expenses.repository';
 
 const NOT_FOUND = 'P2025';
+const FOREIGN_KEY_VIOLATION = 'P2003';
 
 @Injectable()
 export class ExpensesService {
@@ -39,14 +41,18 @@ export class ExpensesService {
     const rows = await this.expenses.summarize(userId, from, to);
     return {
       count: rows.reduce((sum, row) => sum + row.count, 0),
-      totals: this.totalsByCurrency(rows),
+      totals: totalsByCurrency(rows),
       byCategory: rows,
     };
   }
 
   async create(userId: string, input: CreateExpenseInput): Promise<Expense> {
     await this.assertCategoryAvailable(userId, input.categoryId);
-    return this.expenses.create(userId, { ...input, date: new Date(input.date) });
+    try {
+      return await this.expenses.create(userId, { ...input, date: new Date(input.date) });
+    } catch (error) {
+      throw this.translate(error);
+    }
   }
 
   async update(userId: string, id: string, input: UpdateExpenseInput): Promise<Expense> {
@@ -55,7 +61,7 @@ export class ExpensesService {
     const { date, ...rest } = input;
     const data: UpdateExpenseData = { ...rest, ...(date !== undefined && { date: new Date(date) }) };
     try {
-      return await this.expenses.update(id, data);
+      return await this.expenses.update(id, userId, data);
     } catch (error) {
       throw this.translate(error);
     }
@@ -64,7 +70,7 @@ export class ExpensesService {
   async remove(userId: string, id: string): Promise<void> {
     await this.getOwned(userId, id);
     try {
-      await this.expenses.delete(id);
+      await this.expenses.delete(id, userId);
     } catch (error) {
       throw this.translate(error);
     }
@@ -83,24 +89,11 @@ export class ExpensesService {
     if (!category) throw new BadRequestException('Category not found');
   }
 
-  private totalsByCurrency(rows: SummaryRow[]): ExpenseSummaryDto['totals'] {
-    // Sum in integer cents to avoid float drift.
-    const cents = new Map<string, bigint>();
-    for (const row of rows) {
-      const [whole = '0', fraction = ''] = row.amount.split('.');
-      const value = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0').slice(0, 2));
-      cents.set(row.currency, (cents.get(row.currency) ?? 0n) + value);
-    }
-    return [...cents.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([currency, total]) => ({
-        currency,
-        amount: `${total / 100n}.${(total % 100n).toString().padStart(2, '0')}`,
-      }));
-  }
-
   private translate(error: unknown): unknown {
-    if ((error as { code?: string }).code === NOT_FOUND) return new NotFoundException('Expense not found');
+    const code = (error as { code?: string }).code;
+    if (code === NOT_FOUND) return new NotFoundException('Expense not found');
+    // The category was deleted between the availability check and the write.
+    if (code === FOREIGN_KEY_VIOLATION) return new BadRequestException('Category not found');
     return error;
   }
 }

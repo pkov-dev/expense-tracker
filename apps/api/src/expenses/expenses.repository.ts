@@ -59,12 +59,13 @@ export class ExpensesRepository {
     return this.prisma.expense.create({ data: { ...data, userId } });
   }
 
-  update(id: string, data: UpdateExpenseData): Promise<Expense> {
-    return this.prisma.expense.update({ where: { id }, data });
+  /** Scoped by owner in the query itself (not only by a prior lookup); throws P2025 if there is no such row. */
+  update(id: string, userId: string, data: UpdateExpenseData): Promise<Expense> {
+    return this.prisma.expense.update({ where: { id, userId }, data });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.expense.delete({ where: { id } });
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.expense.delete({ where: { id, userId } });
   }
 
   /** Per-category/currency sums for the period; currency totals are derived from these rows by the caller. */

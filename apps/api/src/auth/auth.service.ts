@@ -13,6 +13,9 @@ import type { JwtPayload } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** A just-rotated refresh token may be replayed for this long without tripping reuse detection. */
+export const REFRESH_REUSE_GRACE_MS = 10_000;
+
 const sha256 = (value: string) => createHash('sha256').update(value).digest();
 
 @Injectable()
@@ -49,9 +52,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    // Revoke atomically: if it was already revoked, the token is being reused → kill the whole family.
-    const revokedNow = await this.refreshTokens.revoke(stored.id);
-    if (!revokedNow) {
+    // Rotate atomically. Losing the race means the token was already used: either a concurrent request
+    // of the same client (a few parallel page loads right after the access cookie expired) or a replay.
+    const rotatedNow = await this.refreshTokens.rotate(stored.id);
+    if (!rotatedNow && !(await this.isRecentlyRotated(stored.id))) {
       await this.refreshTokens.revokeAllForUser(stored.userId);
       throw new UnauthorizedException('Refresh token reuse detected');
     }
@@ -98,6 +102,18 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken: `${id}.${secret}`, user: toUserDto(user) };
+  }
+
+  /**
+   * True when the token was rotated (not logged out) within the grace window. That replay is answered
+   * with a fresh pair instead of killing every session: the client that lost the race still gets a valid
+   * session, and the two sibling tokens simply expire on their own. The window is short on purpose —
+   * it is the time during which a stolen, just-rotated token can be replayed without being detected.
+   */
+  private async isRecentlyRotated(id: string): Promise<boolean> {
+    // Re-read: the copy loaded at the start of the request predates the winner's update.
+    const current = await this.refreshTokens.findById(id);
+    return current?.rotatedAt != null && Date.now() - current.rotatedAt.getTime() <= REFRESH_REUSE_GRACE_MS;
   }
 
   private parseRefreshToken(token: string): { id: string; secret: string } {

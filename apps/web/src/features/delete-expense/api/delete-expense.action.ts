@@ -1,7 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { ApiError, authorizedRequest, type FormState } from '@/shared/api';
+import { ApiError, type FormState } from '@/shared/api';
+import { authorizedRequest } from '@/shared/api/server';
+import { ROUTES } from '@/shared/config';
 
 export async function deleteExpenseAction(id: string): Promise<FormState> {
   try {
@@ -11,5 +13,5 @@ export async function deleteExpenseAction(id: string): Promise<FormState> {
     // Already gone → treat as success so the list just refreshes.
     if (error.status !== 404) return { error: 'Не удалось удалить транзакцию. Попробуйте позже' };
   }
-  revalidatePath('/');
+  revalidatePath(ROUTES.transactions);
 }

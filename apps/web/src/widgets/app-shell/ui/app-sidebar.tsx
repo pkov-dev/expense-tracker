@@ -26,7 +26,9 @@ export function AppSidebar({ user }: { user: UserDto }) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                {/* shrink-0: in the collapsed (icon) sidebar the button is only 32px wide, and without it
+                    flexbox squeezes the logo to make room for the hidden title. */}
+                <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Wallet className="size-4" />
                 </div>
                 <span className="truncate font-semibold">Expense Tracker</span>
