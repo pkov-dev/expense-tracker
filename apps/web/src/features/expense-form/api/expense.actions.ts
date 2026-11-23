@@ -7,7 +7,8 @@ import {
   updateExpenseSchema,
 } from '@expense-tracker/shared';
 import { revalidatePath } from 'next/cache';
-import { ApiError, authorizedRequest, type FormState } from '@/shared/api';
+import { ApiError, type FormState } from '@/shared/api';
+import { authorizedRequest } from '@/shared/api/server';
 
 function toFormError(error: unknown): FormState {
   // Anything that is not an API error (e.g. the redirect thrown on a dead session) must propagate.

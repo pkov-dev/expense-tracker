@@ -2,7 +2,7 @@
 
 import { type AuthResponseDto, type RegisterInput, registerSchema } from '@expense-tracker/shared';
 import { redirect } from 'next/navigation';
-import { createSession } from '@/entities/session';
+import { createSession } from '@/entities/session/server';
 import { ApiError, apiRequest, type FormState } from '@/shared/api';
 
 export async function registerAction(input: RegisterInput): Promise<FormState> {

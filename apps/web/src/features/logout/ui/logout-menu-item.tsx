@@ -1,17 +1,26 @@
+'use client';
+
 import { LogOut } from 'lucide-react';
+import { useTransition } from 'react';
 import { DropdownMenuItem } from '@/shared/ui/dropdown-menu';
 import { logoutAction } from '../api/logout.action';
 
-/** Server-rendered `<form action>`: works without client JS state. */
 export function LogoutMenuItem() {
+  const [isPending, startTransition] = useTransition();
+
   return (
-    <form action={logoutAction}>
-      <DropdownMenuItem asChild>
-        <button type="submit" className="w-full cursor-pointer">
-          <LogOut />
-          Выйти
-        </button>
-      </DropdownMenuItem>
-    </form>
+    <DropdownMenuItem
+      disabled={isPending}
+      onSelect={(event) => {
+        // Keep the menu (and with it this item) mounted until the action has run; the action redirects.
+        event.preventDefault();
+        startTransition(async () => {
+          await logoutAction();
+        });
+      }}
+    >
+      <LogOut />
+      {isPending ? 'Выходим…' : 'Выйти'}
+    </DropdownMenuItem>
   );
 }

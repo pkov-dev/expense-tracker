@@ -1,5 +1,6 @@
 export { CURRENCIES, DEFAULT_CURRENCY } from './currencies';
 export { API_URL } from './env';
+export { ROUTES } from './routes';
 export {
   ACCESS_COOKIE_SKEW_SECONDS,
   ACCESS_TOKEN_COOKIE,

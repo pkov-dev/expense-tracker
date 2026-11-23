@@ -2,7 +2,7 @@
 
 import { type LoginInput, loginSchema, type AuthResponseDto } from '@expense-tracker/shared';
 import { redirect } from 'next/navigation';
-import { createSession } from '@/entities/session';
+import { createSession } from '@/entities/session/server';
 import { ApiError, apiRequest, type FormState } from '@/shared/api';
 
 export async function loginAction(input: LoginInput): Promise<FormState> {

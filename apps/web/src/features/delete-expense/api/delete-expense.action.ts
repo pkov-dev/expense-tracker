@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { ApiError, authorizedRequest, type FormState } from '@/shared/api';
+import { ApiError, type FormState } from '@/shared/api';
+import { authorizedRequest } from '@/shared/api/server';
 
 export async function deleteExpenseAction(id: string): Promise<FormState> {
   try {
