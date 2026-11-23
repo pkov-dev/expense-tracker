@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 11 blocks dependency build scripts by default
+allowBuilds:
+  prisma: true
+  '@prisma/engines': true
+  '@nestjs/core': true
+  sharp: true
+  unrs-resolver: true
+  argon2: true

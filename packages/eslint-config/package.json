@@ -1,0 +1,21 @@
+{
+  "name": "@expense-tracker/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./next": "./next.js",
+    "./nest": "./nest.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint-config-next": "^16.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "typescript-eslint": "^8.46.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9.39.0"
+  }
+}
