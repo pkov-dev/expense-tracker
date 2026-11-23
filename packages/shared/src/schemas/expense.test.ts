@@ -7,7 +7,7 @@ import {
   updateExpenseSchema,
 } from './expense';
 
-const valid = { amount: 12.5, currency: 'RUB', date: '2026-11-23' };
+const valid = { amount: 12.5, currency: 'USD', date: '2026-11-23' };
 
 describe('createExpenseSchema amount', () => {
   it.each([
@@ -57,14 +57,15 @@ describe('createExpenseSchema amount', () => {
 
 describe('currencySchema', () => {
   it.each([
-    ['rub', 'RUB'],
+    ['gbp', 'GBP'],
     ['USD', 'USD'],
     ['eUr', 'EUR'],
   ])('normalizes %s to %s', (input, expected) => {
     expect(currencySchema.parse(input)).toBe(expected);
   });
 
-  it.each(['ZZ1', 'R1B', 'RU', 'RUBL', '', ' US', 'US ', 'р', 'руб', '12', 'U$D'])(
+  // Only the ASCII letters A-Z form a currency code: accented letters, symbols and full-width letters don't.
+  it.each(['ZZ1', 'U5D', 'EU', 'EURO', '', ' US', 'US ', 'ÜSD', '€UR', 'ＵＳＤ', '12', 'U$D'])(
     'rejects %j',
     (input) => {
       expect(currencySchema.safeParse(input).success).toBe(false);

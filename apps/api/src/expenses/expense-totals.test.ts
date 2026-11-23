@@ -10,32 +10,32 @@ describe('totalsByCurrency', () => {
 
   it('sums per currency and never across currencies', () => {
     expect(
-      totalsByCurrency([row('RUB', '100.00'), row('USD', '5.50'), row('RUB', '23.40')]),
+      totalsByCurrency([row('EUR', '100.00'), row('USD', '5.50'), row('EUR', '23.40')]),
     ).toEqual([
-      { currency: 'RUB', amount: '123.40' },
+      { currency: 'EUR', amount: '123.40' },
       { currency: 'USD', amount: '5.50' },
     ]);
   });
 
   it('does not drift like floating point would (0.1 + 0.2)', () => {
-    expect(totalsByCurrency([row('RUB', '0.10'), row('RUB', '0.20')])).toEqual([
-      { currency: 'RUB', amount: '0.30' },
+    expect(totalsByCurrency([row('EUR', '0.10'), row('EUR', '0.20')])).toEqual([
+      { currency: 'EUR', amount: '0.30' },
     ]);
   });
 
   it('carries cents into the whole part and pads them', () => {
-    expect(totalsByCurrency([row('RUB', '0.99'), row('RUB', '0.01')])).toEqual([
-      { currency: 'RUB', amount: '1.00' },
+    expect(totalsByCurrency([row('EUR', '0.99'), row('EUR', '0.01')])).toEqual([
+      { currency: 'EUR', amount: '1.00' },
     ]);
-    expect(totalsByCurrency([row('RUB', '1.05')])).toEqual([{ currency: 'RUB', amount: '1.05' }]);
+    expect(totalsByCurrency([row('EUR', '1.05')])).toEqual([{ currency: 'EUR', amount: '1.05' }]);
   });
 
   it('copes with amounts beyond Number precision', () => {
-    expect(totalsByCurrency([row('RUB', '9999999999.99'), row('RUB', '9999999999.99')])).toEqual([
-      { currency: 'RUB', amount: '19999999999.98' },
+    expect(totalsByCurrency([row('EUR', '9999999999.99'), row('EUR', '9999999999.99')])).toEqual([
+      { currency: 'EUR', amount: '19999999999.98' },
     ]);
-    expect(totalsByCurrency([row('RUB', '90071992547409.91'), row('RUB', '0.09')])).toEqual([
-      { currency: 'RUB', amount: '90071992547410.00' },
+    expect(totalsByCurrency([row('EUR', '90071992547409.91'), row('EUR', '0.09')])).toEqual([
+      { currency: 'EUR', amount: '90071992547410.00' },
     ]);
   });
 
@@ -47,7 +47,7 @@ describe('totalsByCurrency', () => {
 
   it('orders currencies alphabetically', () => {
     expect(
-      totalsByCurrency([row('USD', '1'), row('EUR', '1'), row('RUB', '1')]).map((t) => t.currency),
-    ).toEqual(['EUR', 'RUB', 'USD']);
+      totalsByCurrency([row('USD', '1'), row('EUR', '1'), row('GBP', '1')]).map((t) => t.currency),
+    ).toEqual(['EUR', 'GBP', 'USD']);
   });
 });

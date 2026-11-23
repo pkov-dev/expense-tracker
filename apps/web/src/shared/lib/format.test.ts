@@ -5,8 +5,8 @@ import { formatDate, formatMoney, toIsoDate } from './format';
 const plain = (value: string) => value.replace(/\s/g, ' ');
 
 describe('formatMoney', () => {
-  it('formats rubles the Russian way', () => {
-    expect(plain(formatMoney('1234.5', 'RUB'))).toBe('1 234,50 ₽');
+  it('formats euros with the app locale', () => {
+    expect(plain(formatMoney('1234.5', 'EUR'))).toBe('1 234,50 €');
   });
 
   it('formats other currencies', () => {
