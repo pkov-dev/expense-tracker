@@ -15,6 +15,7 @@ import { toExpenseDto } from './expense.mapper';
 import { ExpensesRepository, type SummaryRow, type UpdateExpenseData } from './expenses.repository';
 
 const NOT_FOUND = 'P2025';
+const FOREIGN_KEY_VIOLATION = 'P2003';
 
 @Injectable()
 export class ExpensesService {
@@ -46,7 +47,11 @@ export class ExpensesService {
 
   async create(userId: string, input: CreateExpenseInput): Promise<Expense> {
     await this.assertCategoryAvailable(userId, input.categoryId);
-    return this.expenses.create(userId, { ...input, date: new Date(input.date) });
+    try {
+      return await this.expenses.create(userId, { ...input, date: new Date(input.date) });
+    } catch (error) {
+      throw this.translate(error);
+    }
   }
 
   async update(userId: string, id: string, input: UpdateExpenseInput): Promise<Expense> {
@@ -55,7 +60,7 @@ export class ExpensesService {
     const { date, ...rest } = input;
     const data: UpdateExpenseData = { ...rest, ...(date !== undefined && { date: new Date(date) }) };
     try {
-      return await this.expenses.update(id, data);
+      return await this.expenses.update(id, userId, data);
     } catch (error) {
       throw this.translate(error);
     }
@@ -64,7 +69,7 @@ export class ExpensesService {
   async remove(userId: string, id: string): Promise<void> {
     await this.getOwned(userId, id);
     try {
-      await this.expenses.delete(id);
+      await this.expenses.delete(id, userId);
     } catch (error) {
       throw this.translate(error);
     }
@@ -100,7 +105,10 @@ export class ExpensesService {
   }
 
   private translate(error: unknown): unknown {
-    if ((error as { code?: string }).code === NOT_FOUND) return new NotFoundException('Expense not found');
+    const code = (error as { code?: string }).code;
+    if (code === NOT_FOUND) return new NotFoundException('Expense not found');
+    // The category was deleted between the availability check and the write.
+    if (code === FOREIGN_KEY_VIOLATION) return new BadRequestException('Category not found');
     return error;
   }
 }

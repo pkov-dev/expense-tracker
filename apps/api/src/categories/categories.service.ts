@@ -29,7 +29,7 @@ export class CategoriesService {
   async update(userId: string, id: string, input: UpdateCategoryInput): Promise<Category> {
     await this.getOwned(userId, id);
     try {
-      return await this.categories.update(id, input);
+      return await this.categories.update(id, userId, input);
     } catch (error) {
       throw this.translate(error);
     }
@@ -38,7 +38,7 @@ export class CategoriesService {
   async remove(userId: string, id: string): Promise<void> {
     await this.getOwned(userId, id);
     try {
-      await this.categories.delete(id);
+      await this.categories.delete(id, userId);
     } catch (error) {
       throw this.translate(error);
     }

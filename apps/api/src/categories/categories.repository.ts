@@ -26,11 +26,12 @@ export class CategoriesRepository {
     return this.prisma.category.create({ data: { ...data, userId } });
   }
 
-  update(id: string, data: UpdateCategoryData): Promise<Category> {
-    return this.prisma.category.update({ where: { id }, data });
+  /** Scoped by owner in the query itself (not only by a prior lookup); throws P2025 if there is no such row. */
+  update(id: string, userId: string, data: UpdateCategoryData): Promise<Category> {
+    return this.prisma.category.update({ where: { id, userId }, data });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.category.delete({ where: { id } });
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.category.delete({ where: { id, userId } });
   }
 }
