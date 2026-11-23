@@ -26,4 +26,15 @@ describe('GET /auth/signout', () => {
     expect(response.status).toBe(403);
     expect(endSession).not.toHaveBeenCalled();
   });
+
+  // The refusal must not strand a user whose session really is dead (e.g. arriving from an external link):
+  // the page offers a link, and following it is a same-origin request that does log out.
+  it('answers a refused request with a page that links back to the signout route', async () => {
+    const response = await signout({ 'sec-fetch-site': 'cross-site' });
+    expect(response.headers.get('content-type')).toContain('text/html');
+    expect(await response.text()).toContain('href="/auth/signout"');
+
+    await signout({ 'sec-fetch-site': 'same-origin' });
+    expect(endSession).toHaveBeenCalledOnce();
+  });
 });
