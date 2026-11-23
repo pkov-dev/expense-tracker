@@ -1,18 +1,25 @@
 import { z } from 'zod';
 import { paginationQuerySchema } from './pagination';
 
-/** ISO 4217 currency code, e.g. "USD", "EUR", "RUB". */
+/** ISO 4217 currency code: three letters, normalized to upper case ("usd" → "USD"). */
 export const currencySchema = z
   .string()
-  .length(3)
+  .regex(/^[A-Za-z]{3}$/, 'Currency must be a 3-letter ISO 4217 code')
   .transform((value) => value.toUpperCase());
 
 /** Decimal(12,2) in the DB → positive, at most 9 999 999 999.99, 2 decimal places. */
 export const expenseAmountSchema = z.number().positive().max(9_999_999_999.99).multipleOf(0.01);
 
+/**
+ * A JSON number or a plain decimal string ("12.50"). Deliberately not `z.coerce.number()`: that would
+ * turn `true`, `[]`, `""` or `"1e3"` into numbers and store them.
+ */
+const amountInputSchema = z
+  .union([z.number(), z.string().trim().regex(/^\d+(\.\d+)?$/, 'Amount must be a decimal number').transform(Number)])
+  .pipe(expenseAmountSchema);
+
 export const createExpenseSchema = z.object({
-  /** Accepts numeric strings too (query/form input). */
-  amount: z.coerce.number().pipe(expenseAmountSchema),
+  amount: amountInputSchema,
   currency: currencySchema,
   description: z.string().trim().max(500).nullable().optional(),
   /** Calendar date of the expense, "YYYY-MM-DD". */
