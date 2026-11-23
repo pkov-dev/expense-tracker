@@ -1,2 +1,2 @@
-/** Result returned by a form Server Action; `undefined` means success (the action redirected). */
+/** Result returned by a form Server Action: `undefined` on success, `{ error }` to show a message. */
 export type FormState = { error: string } | undefined;

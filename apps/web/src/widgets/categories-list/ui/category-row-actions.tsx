@@ -1,17 +1,10 @@
 'use client';
 
 import type { CategoryDto } from '@expense-tracker/shared';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { EditCategoryDialog } from '@/features/category-form';
 import { DeleteCategoryDialog } from '@/features/delete-category';
-import { Button } from '@/shared/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu';
+import { RowActionsMenu } from '@/shared/ui/row-actions-menu';
 
 export function CategoryRowActions({ category }: { category: CategoryDto }) {
   const [editOpen, setEditOpen] = useState(false);
@@ -19,25 +12,11 @@ export function CategoryRowActions({ category }: { category: CategoryDto }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={`Действия с категорией «${category.name}»`}>
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-            <Pencil />
-            Редактировать
-          </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
-            <Trash2 />
-            Удалить
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Dialogs live outside the menu content, otherwise they unmount when the menu closes. */}
+      <RowActionsMenu
+        label={`Действия с категорией «${category.name}»`}
+        onEdit={() => setEditOpen(true)}
+        onDelete={() => setDeleteOpen(true)}
+      />
       <EditCategoryDialog open={editOpen} onOpenChange={setEditOpen} category={category} />
       <DeleteCategoryDialog
         categoryId={category.id}

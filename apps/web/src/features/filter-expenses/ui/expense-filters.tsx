@@ -5,7 +5,8 @@ import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { CategoryBadge } from '@/entities/category';
-import { expensesHref } from '@/entities/expense';
+import { toExpensesQueryString } from '@/entities/expense';
+import { ROUTES } from '@/shared/config';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -29,7 +30,7 @@ export function ExpenseFilters({ categories, filters }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const apply = (next: Filters) => startTransition(() => router.replace(expensesHref(next)));
+  const apply = (next: Filters) => startTransition(() => router.replace(`${ROUTES.transactions}${toExpensesQueryString(next)}`));
   const hasFilters = Boolean(filters.categoryId || filters.from || filters.to);
 
   return (

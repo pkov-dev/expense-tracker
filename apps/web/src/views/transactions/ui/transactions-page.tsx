@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getCategories } from '@/entities/category/server';
-import { currentMonthRange, expensesHref, parseExpenseFilters } from '@/entities/expense';
+import { currentMonthRange, parseExpenseFilters, toExpensesQueryString } from '@/entities/expense';
 import { getExpenses, getExpenseSummary } from '@/entities/expense/server';
 import { CreateExpenseButton } from '@/features/expense-form';
 import { ExpenseFilters } from '@/features/filter-expenses';
+import { ROUTES } from '@/shared/config';
 import { ExpenseSummary } from '@/widgets/expense-summary';
 import { ExpensesTable } from '@/widgets/expenses-table';
 
@@ -19,9 +20,12 @@ export async function TransactionsPage({ searchParams }: { searchParams: Promise
   ]);
 
   // Stale link (e.g. rows were deleted): jump to the last existing page instead of showing an empty one.
-  if (filters.page > data.totalPages) redirect(expensesHref(filters, data.totalPages));
+  if (filters.page > data.totalPages)
+    redirect(`${ROUTES.transactions}${toExpensesQueryString(filters, data.totalPages)}`);
 
-  const periodLabel = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(new Date());
+  const periodLabel = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(
+    new Date(),
+  );
   const { categoryId, from, to } = filters;
 
   return (
