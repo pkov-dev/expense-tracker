@@ -31,7 +31,20 @@ Tests: Vitest in `shared`, `web` and `api` (`pnpm test`; `pnpm --filter @expense
 
 ## Git workflow
 
-One branch per feature or fix (`feat/…`, `fix/…`, `refactor/…`), never commit to `main` directly; work is merged through a pull request (GitHub CLI `gh` is installed). Commits follow Conventional Commits (`type(scope): subject`), are written in English, one logical change per commit. The remote uses SSH, which may not be set up on every machine; `gh auth setup-git` makes HTTPS pushes work.
+One branch per feature or fix (`feat/…`, `fix/…`, `refactor/…`), never commit to `main` directly; work is merged through a pull request. All GitHub operations (repositories, pull requests, issues, checks) go through the GitHub CLI `gh`. Commits follow Conventional Commits (`type(scope): subject`), are written in English, one logical change per commit. The remote uses SSH, which may not be set up on every machine; `gh auth setup-git` makes HTTPS pushes work.
+
+### Pull requests
+
+Push the branch (`git push -u origin <branch>`) and open the PR with `gh pr create --base main`. Don't push, open or merge a PR unless asked.
+
+- **Title**: one Conventional Commits line for the whole branch (`type(scope): subject`, English, ≤ 72 characters), e.g. `fix: address code review findings in auth, validation and UI`. Use the type that matches most of the branch; use `feat` only for user-visible features.
+- **Before writing the description**, read `git log main..HEAD`, `git diff main --stat` and the diff of the files that matter. Describe what the branch actually changes, not what was planned.
+- **Description** (English), in this order:
+  1. **Summary** — 1–3 sentences: what problem this solves and why.
+  2. **Changes** — grouped by area (API / Web / Shared / Tooling), each item saying what was fixed or added and why it matters. Not a file-by-file list.
+  3. **Verification** — what was run (typecheck, lint, test, build, curl/manual checks) with results, and what was *not* verified.
+  4. **Notes** — migrations to apply, breaking changes, deliberately deferred work, anything a reviewer must know before merging.
+- End the description with the `🤖 Generated with [Claude Code](https://claude.com/claude-code)` line.
 
 ## Architecture notes
 
