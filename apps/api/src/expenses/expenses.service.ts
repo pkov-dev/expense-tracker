@@ -12,7 +12,8 @@ import { QueryBus } from '@nestjs/cqrs';
 import { GetCategoryByIdQuery } from '../categories';
 import type { Expense } from '../generated/prisma/client';
 import { toExpenseDto } from './expense.mapper';
-import { ExpensesRepository, type SummaryRow, type UpdateExpenseData } from './expenses.repository';
+import { totalsByCurrency } from './expense-totals';
+import { ExpensesRepository, type UpdateExpenseData } from './expenses.repository';
 
 const NOT_FOUND = 'P2025';
 const FOREIGN_KEY_VIOLATION = 'P2003';
@@ -40,7 +41,7 @@ export class ExpensesService {
     const rows = await this.expenses.summarize(userId, from, to);
     return {
       count: rows.reduce((sum, row) => sum + row.count, 0),
-      totals: this.totalsByCurrency(rows),
+      totals: totalsByCurrency(rows),
       byCategory: rows,
     };
   }
@@ -86,22 +87,6 @@ export class ExpensesService {
     if (!categoryId) return;
     const category = await this.queryBus.execute(new GetCategoryByIdQuery(categoryId, userId));
     if (!category) throw new BadRequestException('Category not found');
-  }
-
-  private totalsByCurrency(rows: SummaryRow[]): ExpenseSummaryDto['totals'] {
-    // Sum in integer cents to avoid float drift.
-    const cents = new Map<string, bigint>();
-    for (const row of rows) {
-      const [whole = '0', fraction = ''] = row.amount.split('.');
-      const value = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0').slice(0, 2));
-      cents.set(row.currency, (cents.get(row.currency) ?? 0n) + value);
-    }
-    return [...cents.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([currency, total]) => ({
-        currency,
-        amount: `${total / 100n}.${(total % 100n).toString().padStart(2, '0')}`,
-      }));
   }
 
   private translate(error: unknown): unknown {
